@@ -33,13 +33,13 @@ namespace Rebound
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.prgProcessing = new System.Windows.Forms.ProgressBar();
             this.lblProcessing = new System.Windows.Forms.Label();
+            this.rmsOutput = new Rebound.RMSControl();
+            this.rmsInput = new Rebound.RMSControl();
+            this.prgProcessing = new System.Windows.Forms.ProgressBar();
             this.rabDirect = new System.Windows.Forms.RadioButton();
             this.rabImpulseReponse = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.rmsOutput = new Rebound.RMSControl();
-            this.rmsInput = new Rebound.RMSControl();
             this.water1 = new Rebound.WaterControl();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -75,6 +75,38 @@ namespace Rebound
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Progress";
             // 
+            // lblProcessing
+            // 
+            this.lblProcessing.AutoSize = true;
+            this.lblProcessing.Location = new System.Drawing.Point(6, 134);
+            this.lblProcessing.Name = "lblProcessing";
+            this.lblProcessing.Size = new System.Drawing.Size(0, 13);
+            this.lblProcessing.TabIndex = 5;
+            // 
+            // rmsOutput
+            // 
+            this.rmsOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.rmsOutput.Gain = 4;
+            this.rmsOutput.Incremental = true;
+            this.rmsOutput.Location = new System.Drawing.Point(6, 69);
+            this.rmsOutput.Name = "rmsOutput";
+            this.rmsOutput.Rms = null;
+            this.rmsOutput.Size = new System.Drawing.Size(177, 40);
+            this.rmsOutput.TabIndex = 4;
+            // 
+            // rmsInput
+            // 
+            this.rmsInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.rmsInput.Gain = 2;
+            this.rmsInput.Incremental = false;
+            this.rmsInput.Location = new System.Drawing.Point(6, 19);
+            this.rmsInput.Name = "rmsInput";
+            this.rmsInput.Rms = null;
+            this.rmsInput.Size = new System.Drawing.Size(177, 44);
+            this.rmsInput.TabIndex = 3;
+            // 
             // prgProcessing
             // 
             this.prgProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
@@ -85,14 +117,6 @@ namespace Rebound
             this.prgProcessing.Step = 1;
             this.prgProcessing.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.prgProcessing.TabIndex = 2;
-            // 
-            // lblProcessing
-            // 
-            this.lblProcessing.AutoSize = true;
-            this.lblProcessing.Location = new System.Drawing.Point(6, 134);
-            this.lblProcessing.Name = "lblProcessing";
-            this.lblProcessing.Size = new System.Drawing.Size(0, 13);
-            this.lblProcessing.TabIndex = 5;
             // 
             // rabDirect
             // 
@@ -130,33 +154,12 @@ namespace Rebound
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Processing";
             // 
-            // rmsOutput
-            // 
-            this.rmsOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.rmsOutput.Gain = 4;
-            this.rmsOutput.Incremental = true;
-            this.rmsOutput.Location = new System.Drawing.Point(6, 69);
-            this.rmsOutput.Name = "rmsOutput";
-            this.rmsOutput.Size = new System.Drawing.Size(177, 40);
-            this.rmsOutput.TabIndex = 4;
-            // 
-            // rmsInput
-            // 
-            this.rmsInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.rmsInput.Gain = 2;
-            this.rmsInput.Incremental = false;
-            this.rmsInput.Location = new System.Drawing.Point(6, 19);
-            this.rmsInput.Name = "rmsInput";
-            this.rmsInput.Size = new System.Drawing.Size(177, 44);
-            this.rmsInput.TabIndex = 3;
-            // 
             // water1
             // 
             this.water1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.water1.Gain = 0;
             this.water1.Location = new System.Drawing.Point(12, 12);
             this.water1.Name = "water1";
             this.water1.RenderingMode = Rebound.WaterControl.RenderingModeEnum.WaveHeight;

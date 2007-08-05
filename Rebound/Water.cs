@@ -7,87 +7,80 @@ namespace Rebound
 {
     public class Water
     {
-        private long[][] mainMatrix;
-        private long[][] copyMatrix;
+        private long[,] mainMatrix;
+        private long[,] copyMatrix;
+        private bool[,] maskMatrix;
 
         public Water(int width, int height)
         {
-            InitializeMainMatrix(width, height);
-            InitializeCopyMatrix(width, height);
+            mainMatrix = new long[width, height];
+            copyMatrix = new long[width, height];
+            maskMatrix = new bool[width, height];
+
+            /*for(int x = 1; x < width - 1; x++)
+                for(int y = 1; y < height - 1; y++)
+                    maskMatrix[x, y] = (Math.Sqrt(Math.Pow(x-width/2,2) + Math.Pow(y-height/2,2)) > height/2);*/
+            
+            /*for(int x = 1; x < width - 1; x++)
+                for(int y = 1; y < height - 1; y++)
+                    maskMatrix[x, y] = (x == width/2 && (y - width/2)*(y - width/2) > 20); */
         }
 
-        public long[][] MainMatrix
+        public long[,] MainMatrix
         {
             get { return mainMatrix; }
         }
 
-        private void InitializeMainMatrix(int width, int height)
+        public bool[,] MaskMatrix
         {
-            mainMatrix = new long[height][];
-            for(int i = 0; i < mainMatrix.Length; i++)
-            {
-                mainMatrix[i] = new long[width];
-                for(int j = 0; j < mainMatrix[i].Length; j++)
-                    mainMatrix[i][j] = 0;
-            }
+            get { return maskMatrix; }
         }
-
-        private void InitializeCopyMatrix(int width, int height)
-        {
-            copyMatrix = new long[height][];
-            for(int i = 0; i < copyMatrix.Length; i++)
-            {
-                copyMatrix[i] = new long[width];
-                for(int j = 0; j < copyMatrix[i].Length; j++)
-                    copyMatrix[i][j] = 0;
-            }
-        }
-
 
         public void CalculateNextFrame()
         {
-            long[][] tempMatrix = copyMatrix;
+            long[,] tempMatrix = copyMatrix;
             copyMatrix = mainMatrix;
             mainMatrix = tempMatrix;
 
-            for(int x = 1; x < mainMatrix.Length - 1; x++)
-                for(int y = 1; y < mainMatrix[x].Length - 1; y++)
+            for(int x = 1; x < mainMatrix.GetLength(0) - 1; x++)
+                for(int y = 1; y < mainMatrix.GetLength(1) - 1; y++)
                     CalculateNextPixel(mainMatrix, copyMatrix, x, y);
 
-            AddStatic();
+            ApplyMask();
         }
 
-        private void AddStatic()
+        private void ApplyMask()
         {
-            /*for(int x = 100; x < 120; x++)
-                for(int y = 50; y < 80; y++)
-                    mainMatrix[x][y] = 0;*/
+            for(int x = 0; x < mainMatrix.GetLength(0); x++)
+                for(int y = 0; y < mainMatrix.GetLength(1); y++)
+                    if(maskMatrix[x, y])
+                        mainMatrix[x, y] = 0;
         }
 
-        private void CalculateNextPixel(long[][] targetMatrix, long[][] sourceMatrix, int x, int y)
+        private void CalculateNextPixel(long[,] targetMatrix, long[,] sourceMatrix, int x, int y)
         {
-            targetMatrix[x][y] = -targetMatrix[x][y] + ((
-                                sourceMatrix[x - 1][y]
-                                + sourceMatrix[x + 1][y]
-                                + sourceMatrix[x][y - 1]
-                                + sourceMatrix[x][y + 1]) >> 1);
+            targetMatrix[x,y] = -targetMatrix[x,y] + ((
+                                sourceMatrix[x - 1,y]
+                                + sourceMatrix[x + 1,y]
+                                + sourceMatrix[x,y - 1]
+                                + sourceMatrix[x,y + 1]) >> 1);
 
-            targetMatrix[x][y] -= targetMatrix[x][y] >> 11;
+            targetMatrix[x,y] -= targetMatrix[x,y] >> 11;
         }
 
         public void Drop(int x, int y)
         {
-            mainMatrix[y][x] = 32768 << 14;
+            mainMatrix[x,y] = 32768 << 14;
         }
 
         public void Drop(int x, int y, long value)
         {
-            mainMatrix[y][x] = value;
+            mainMatrix[x,y] = value;
         }
 
         public long Read(int x, int y)
         {
-            return mainMatrix[y][x];
+            return mainMatrix[x,y];
         }
     }
 }

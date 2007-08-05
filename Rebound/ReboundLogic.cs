@@ -15,13 +15,13 @@ namespace Rebound
         void SignalStartedConvolutionCalculation();
         void SignalEndedConvolutionCalculation();
 
-        void SignalProgress(int bytesProcessed);
-        void SignalImpulseResponseProgress(int samplesGenerated);
+        void SignalProgress(float percentDone);
+        void SignalImpulseResponseProgress(float percentDone);
     }
 
     public class ReboundLogic
     {
-        public void GenerateByBruteForce(Stream inputStream, Stream outputStream, WaterRoom room, RMS rms, ReboundCallback callback)
+        public void GenerateByBruteForce(Stream inputStream, Stream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
         {
            callback.SignalStartedDirectCalculation();
 
@@ -45,14 +45,14 @@ namespace Rebound
 
                 if((bytesRead & 1023) == 0)
                 {
-                    callback.SignalProgress(bytesRead);
+                    callback.SignalProgress(((float) bytesRead)/inputLength);
                 }
             }
 
             callback.SignalCompletedDirectCalculation();
         }
 
-        public void GenerateByImpulseResponse(Stream inputStream, Stream outputStream, WaterRoom room, RMS rms, ReboundCallback callback)
+        public void GenerateByImpulseResponse(Stream inputStream, Stream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
         {
             callback.SignalStartedImpulseCalculation();
 
@@ -77,9 +77,9 @@ namespace Rebound
                     rms.inputSample((output >> 14) / 32768.0);
                 }
 
-                if((bytesRead & 32767) == 0)
+                if((bytesRead & 4095) == 0)
                 {
-                    callback.SignalProgress(bytesRead);
+                    callback.SignalProgress(((float) bytesRead)/inputLength);
                 }
             }
 
@@ -123,7 +123,7 @@ namespace Rebound
 
                 if((i & 127) == 0)
                 {
-                    callback.SignalImpulseResponseProgress(i);
+                    callback.SignalImpulseResponseProgress(((float) i)/length);
                 }
             }
 

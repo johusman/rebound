@@ -23,6 +23,7 @@ namespace Rebound
             room.Outputs.Add(new Point(160, 85));
             room.Outputs.Add(new Point(150, 150));
             water1.SetWaterRoom(room);
+            water1.Water_Update();
         }
 
         private void btnProcess_Click(object sender, EventArgs e)
@@ -40,8 +41,6 @@ namespace Rebound
         public void Process()
         {
             long fileSize = (new FileInfo(openFileDialog1.FileName)).Length;
-            prgProcessing.Maximum = (int)fileSize;
-            prgProcessing.Value = 0;
 
             using(Stream inputStream = openFileDialog1.OpenFile())
             {
@@ -55,10 +54,13 @@ namespace Rebound
             ThreadParameters parameters = new ThreadParameters();
             parameters.room = this.room;
             parameters.rms = this.rmsOutput.Rms;
+            parameters.inputLength = fileSize;
+            
             Debug.Assert(parameters.room != null);
             Debug.Assert(parameters.room.Input != null);
             Debug.Assert(parameters.room.Outputs != null);
             Debug.Assert(parameters.room.Outputs.Count > 0);
+            
             thread.Start(parameters);
         }
 
@@ -73,9 +75,13 @@ namespace Rebound
                     ReboundLogic logic = new ReboundLogic();
 
                     if(rabDirect.Checked)
-                        logic.GenerateByBruteForce(inputStream, outputStream, parameters.room, parameters.rms, new ReboundCallbackAdapter(this));
+                        logic.GenerateByBruteForce(inputStream, outputStream,
+                            parameters.inputLength, parameters.room,
+                            parameters.rms, new ReboundCallbackAdapter(this));
                     else
-                        logic.GenerateByImpulseResponse(inputStream, outputStream, parameters.room, parameters.rms, new ReboundCallbackAdapter(this));
+                        logic.GenerateByImpulseResponse(inputStream, outputStream,
+                            parameters.inputLength, parameters.room,
+                            parameters.rms, new ReboundCallbackAdapter(this));
                 }
             }
         }
@@ -104,23 +110,23 @@ namespace Rebound
             EnableUserInput();
         }
 
-        public void SignalProgress(int bytesRead)
+        public void SignalProgress(float percentDone)
         {
             if(this.WindowState != FormWindowState.Minimized)
             {
                 water1.Water_Update();
-                prgProcessing.Value = bytesRead;
+                prgProcessing.Value = (int) (percentDone * 100);
                 water1.Refresh();
                 rmsOutput.Refresh();
             }
         }
 
-        public void SignalImpulseResponseProgress(int samplesGenerated)
+        public void SignalImpulseResponseProgress(float percentDone)
         {
             if(this.WindowState != FormWindowState.Minimized)
             {
                 water1.Water_Update();
-                //            prgProcessing.Value = samplesGenerated;
+                prgProcessing.Value = (int) (percentDone * 100);
                 water1.Refresh();
                 rmsOutput.Refresh();
             }
@@ -128,6 +134,7 @@ namespace Rebound
 
         public void SignalStartedDirectCalculation()
         {
+            prgProcessing.Value = 0;
             lblProcessing.Text = "Processing wave...";
             water1.Gain = 0;
             DisableUserInput();
@@ -145,12 +152,14 @@ namespace Rebound
 
         public void SignalStartedConvolutionCalculation()
         {
+            prgProcessing.Value = 0;
             lblProcessing.Text = "Processing wave...";
             Refresh();
         }
 
         public void SignalStartedImpulseCalculation()
         {
+            prgProcessing.Value = 0;
             lblProcessing.Text = "Generating impulse responses...";
             water1.Gain = 3;
             Refresh();
@@ -177,11 +186,9 @@ namespace Rebound
         {
             if(btnProcess.Enabled)
             {
-                WaterRoom newRoom = new WaterRoom(water1.Width, water1.Height);
-                newRoom.Input = room.Input;
-                newRoom.Outputs = room.Outputs;
-                room = newRoom;
+                room = new WaterRoom(water1.Width, water1.Height, room);
                 water1.SetWaterRoom(room);
+                water1.Water_Update();
                 water1.Refresh();
             }
         }
@@ -191,12 +198,13 @@ namespace Rebound
     {
         public WaterRoom room;
         public RMS rms;
+        public long inputLength;
     }
 
     class ReboundCallbackAdapter : ReboundCallback
     {
         private delegate void noArgumentCall();
-        private delegate void intArgumentCall(int arg);
+        private delegate void floatArgumentCall(float arg);
         frmRebound form;
 
         public ReboundCallbackAdapter(frmRebound form)
@@ -231,14 +239,14 @@ namespace Rebound
             form.Invoke(new noArgumentCall(form.SignalEndedConvolutionCalculation));
         }
 
-        public void SignalProgress(int bytesProcessed)
+        public void SignalProgress(float percentDone)
         {
-            form.Invoke(new intArgumentCall(form.SignalProgress), bytesProcessed);
+            form.Invoke(new floatArgumentCall(form.SignalProgress), percentDone);
         }
 
-        public void SignalImpulseResponseProgress(int samplesGenerated)
+        public void SignalImpulseResponseProgress(float percentDone)
         {
-            form.Invoke(new intArgumentCall(form.SignalImpulseResponseProgress), samplesGenerated);
+            form.Invoke(new floatArgumentCall(form.SignalImpulseResponseProgress), percentDone);
         }
 
         #endregion

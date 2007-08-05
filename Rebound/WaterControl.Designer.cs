@@ -35,6 +35,7 @@ namespace Rebound
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "WaterControl";
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.WaterControl_MouseMove);
             this.ResumeLayout(false);
 
         }

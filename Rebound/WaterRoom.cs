@@ -16,6 +16,18 @@ namespace Rebound
             water = new Water(width, height);
         }
 
+        public WaterRoom(int width, int height, WaterRoom copyFrom) : this(width, height)
+        {
+            this.Input = copyFrom.Input;
+            this.Outputs = copyFrom.Outputs;
+
+            int copyWidth = Math.Min(water.MaskMatrix.GetLength(0), copyFrom.water.MaskMatrix.GetLength(0));
+            int copyHeight = Math.Min(water.MaskMatrix.GetLength(1), copyFrom.water.MaskMatrix.GetLength(1));
+            for(int x = 0; x < copyWidth; x++)
+                for(int y = 0; y < copyHeight; y++)
+                    water.MaskMatrix[x, y] = copyFrom.water.MaskMatrix[x, y];
+        }
+
         public Water Water
         {
             get { return water; }

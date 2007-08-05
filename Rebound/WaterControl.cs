@@ -58,23 +58,31 @@ namespace Rebound
 
         public void Water_Update()
         {
-            RenderBitmap(room.Water.MainMatrix);
+            RenderBitmap(room.Water.MainMatrix, room.Water.MaskMatrix);
             this.Refresh();
         }
 
-        private unsafe void RenderBitmap(long[][] matrix)
+        private unsafe void RenderBitmap(long[,] matrix, bool[,] mask)
         {
             BitmapData bmd = bitmap.LockBits(new Rectangle(0, 0, this.Width, this.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, bitmap.PixelFormat);
 
-            for(int y = 1; y < matrix.Length - 1; y++)
+            for(int y = 1; y < matrix.GetLength(1) - 1; y++)
             {
                 byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
 
-                for(int x = 1; x < matrix[y].Length - 1; x++)
+                for(int x = 1; x < matrix.GetLength(0) - 1; x++)
                 {
-                    long value = (renderingMode == RenderingModeEnum.WaveHeight) ? matrix[y][x] : matrix[y - 1][x] - matrix[y + 1][x];
+                    long value = 0;
+                    Color color;
+                    if(mask[x, y])
+                        color = Color.Tan;
+                    else
+                    {
+                        value = (renderingMode == RenderingModeEnum.WaveHeight) ? matrix[x, y] : matrix[x, y - 1] - matrix[x, y + 1];
+                        color = CalcColor(value);
+                    }
+
                     int idx = x << 2;
-                    Color color = CalcColor(value);
                     row[idx] = color.B;
                     row[idx + 1] = color.R;
                     row[idx + 2] = color.G;
@@ -108,6 +116,32 @@ namespace Rebound
                 graphics.DrawEllipse(new Pen(Color.FromArgb(255, 255, 0), 1), room.Input.Value.X - 2, room.Input.Value.Y - 2, 5, 5);
             foreach(Point output in room.Outputs)
                 graphics.DrawEllipse(new Pen(Color.FromArgb(255, 0, 255), 1), output.X - 2, output.Y - 2, 5, 5);
+        }
+
+        private void WaterControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            if(e.X > 0 && e.Y > 0 && e.X < this.Width - 1 && e.Y < this.Height - 1)
+            {
+                if(e.Button == MouseButtons.Left)
+                    SetMaskSquare(e.X, e.Y, true);
+                else if(e.Button == MouseButtons.Right)
+                    SetMaskSquare(e.X, e.Y, false);
+            }
+        }
+
+        private void SetMaskSquare(int x, int y, bool value)
+        {
+            room.Water.MaskMatrix[x, y] = value;
+            room.Water.MaskMatrix[x - 1, y] = value;
+            room.Water.MaskMatrix[x, y - 1] = value;
+            room.Water.MaskMatrix[x + 1, y] = value;
+            room.Water.MaskMatrix[x, y + 1] = value;
+            room.Water.MaskMatrix[x + 1, y + 1] = value;
+            room.Water.MaskMatrix[x + 1, y - 1] = value;
+            room.Water.MaskMatrix[x - 1, y + 1] = value;
+            room.Water.MaskMatrix[x - 1, y - 1] = value;
+            Water_Update();
+            Refresh();
         }
     }
 }
