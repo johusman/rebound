@@ -28,6 +28,12 @@ namespace Rebound
 
         private RMS rms;
 
+        public RMS Rms
+        {
+            get { return rms; }
+            set { rms = value; }
+        }
+
         public RMSControl()
         {
             InitializeComponent();

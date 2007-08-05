@@ -11,22 +11,20 @@ namespace Rebound
 {
     public partial class WaterControl : UserControl
     {
-        private Water water = null;
+        private WaterRoom room = null;
         private Bitmap bitmap = null;
         public enum RenderingModeEnum { WaveHeight = 0, WaveDelta = 1 };
         private RenderingModeEnum renderingMode = RenderingModeEnum.WaveHeight;
         private int gain = 0;
-        private Point? input = null;
-        private List<Point> outputs = new List<Point>();
 
         public WaterControl()
         {
             InitializeComponent();
         }
 
-        public WaterControl(Water water) : this()
+        public WaterControl(WaterRoom room) : this()
         {
-            SetWater(water);
+            SetWaterRoom(room);
         }
 
         public RenderingModeEnum RenderingMode
@@ -41,21 +39,9 @@ namespace Rebound
             set { gain = value; }
         }
 
-        public Point? Input
+        public void SetWaterRoom(WaterRoom room)
         {
-            get { return input; }
-            set { input = value; }
-        }
-
-        public List<Point> Outputs
-        {
-            get { return outputs; }
-            set { outputs = value; }
-        }
-        
-        public void SetWater(Water water)
-        {
-            this.water = water;
+            this.room = room;
             bitmap = new Bitmap(this.Width, this.Height, PixelFormat.Format32bppRgb);
         }
 
@@ -72,7 +58,7 @@ namespace Rebound
 
         public void Water_Update()
         {
-            RenderBitmap(water.MainMatrix);
+            RenderBitmap(room.Water.MainMatrix);
             this.Refresh();
         }
 
@@ -118,9 +104,9 @@ namespace Rebound
 
         private void DrawInputsAndOutputs(Graphics graphics)
         {
-            if(input != null)
-                graphics.DrawEllipse(new Pen(Color.FromArgb(255, 255, 0), 1), input.Value.X - 2, input.Value.Y - 2, 5, 5);
-            foreach(Point output in outputs)
+            if(room.Input != null)
+                graphics.DrawEllipse(new Pen(Color.FromArgb(255, 255, 0), 1), room.Input.Value.X - 2, room.Input.Value.Y - 2, 5, 5);
+            foreach(Point output in room.Outputs)
                 graphics.DrawEllipse(new Pen(Color.FromArgb(255, 0, 255), 1), output.X - 2, output.Y - 2, 5, 5);
         }
     }

@@ -9,6 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebound</RootNamespace>
     <AssemblyName>Rebound</AssemblyName>
+    <ApplicationIcon>Rebound.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -92,6 +93,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="ReboundLogic.cs" />
     <Compile Include="RMS.cs" />
     <Compile Include="RMSControl.cs">
       <SubType>UserControl</SubType>
@@ -106,6 +108,7 @@
     <Compile Include="WaterControl.Designer.cs">
       <DependentUpon>WaterControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="WaterRoom.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Rebound.ico" />
