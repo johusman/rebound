@@ -19,40 +19,55 @@ namespace Rebound
         void SignalImpulseResponseProgress(float percentDone);
     }
 
+    public interface ReboundInputStream
+    {
+        Int16[] ReadSamples();
+    }
+
+    public interface ReboundOutputStream
+    {
+        void WriteSamples(Int16[] values);
+    }
+
     public class ReboundLogic
     {
-        public void GenerateByBruteForce(Stream inputStream, Stream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
+        public void GenerateByBruteForce(ReboundInputStream inputStream, ReboundOutputStream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
         {
-           callback.SignalStartedDirectCalculation();
+            callback.SignalStartedDirectCalculation();
 
-            int bytesRead = 0;
-            byte[] bytes = new byte[2];
-            while(inputStream.Read(bytes, 0, 2) == 2)
+            int samplesRead = 0;
+            Int16[] outputs = new Int16[room.Outputs.Count];
+            Int16[] inputs = null;
+            while((inputs = inputStream.ReadSamples()).Length != 0)
             {
-                bytesRead += 2;
-                Int16 input = BitConverter.ToInt16(bytes, 0);
-                room.Water.Drop(room.Input.Value.X, room.Input.Value.Y, ((long)input) << 14);
+                samplesRead++;
+                long averageInput = GetAverage(inputs);
+                room.Water.Drop(room.Input.Value.X, room.Input.Value.Y, averageInput << 14);
 
                 room.Water.CalculateNextFrame();
 
-                foreach(Point point in room.Outputs)
+                for(int i = 0; i < room.Outputs.Count; i++)
                 {
-                    long output = room.Water.Read(point.X, point.Y);
-                    bytes = BitConverter.GetBytes((Int16)(output >> 14));
-                    outputStream.Write(bytes, 0, 2);
-                    rms.inputSample((output >> 14) / 32768.0);
+                    Point point = room.Outputs[i];
+                    long output = room.Water.Read(point.X, point.Y) >> 14;
+                    output = (output > Int16.MaxValue) ? Int16.MaxValue : output;
+                    output = (output < Int16.MinValue) ? Int16.MinValue : output;
+                    outputs[i] = (Int16) output;
+                    
+                    rms.inputSample(outputs[i] / 32768.0);
                 }
+                outputStream.WriteSamples(outputs);
 
-                if((bytesRead & 1023) == 0)
+                if((samplesRead & 511) == 0)
                 {
-                    callback.SignalProgress(((float) bytesRead)/inputLength);
+                    callback.SignalProgress(((float) samplesRead)/inputLength);
                 }
             }
 
             callback.SignalCompletedDirectCalculation();
         }
 
-        public void GenerateByImpulseResponse(Stream inputStream, Stream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
+        public void GenerateByImpulseResponse(ReboundInputStream inputStream, ReboundOutputStream outputStream, long inputLength, WaterRoom room, RMS rms, ReboundCallback callback)
         {
             callback.SignalStartedImpulseCalculation();
 
@@ -60,33 +75,49 @@ namespace Rebound
 
             callback.SignalStartedConvolutionCalculation();
 
-            List<long> inputs = new List<long>();
-            int bytesRead = 0;
-            byte[] bytes = new byte[2];
-            while(inputStream.Read(bytes, 0, 2) == 2)
+            long[] inputChain = new long[inputLength];
+            int samplesRead = 0;
+            Int16[] outputs = new Int16[room.Outputs.Count];
+            Int16[] inputs = null;
+            while ((inputs = inputStream.ReadSamples()).Length != 0)
             {
-                bytesRead += 2;
-                Int16 input = BitConverter.ToInt16(bytes, 0);
-                inputs.Add(input);
+                samplesRead++;
+                long averageInput = GetAverage(inputs);
+                inputChain[samplesRead-1] = averageInput;
 
-                foreach(Point point in room.Outputs)
+                for (int i = 0; i < room.Outputs.Count; i++)
                 {
-                    long output = ConvolutePoint(inputs, responses[point], (bytesRead >> 1) - 1);
-                    bytes = BitConverter.GetBytes((Int16)(output >> 14));
-                    outputStream.Write(bytes, 0, 2);
-                    rms.inputSample((output >> 14) / 32768.0);
+                    Point point = room.Outputs[i]; 
+                    long output = ConvolutePoint(inputChain, responses[point], samplesRead - 1) >> 14;
+                    output = (output > Int16.MaxValue) ? Int16.MaxValue : output;
+                    output = (output < Int16.MinValue) ? Int16.MinValue : output;
+                    outputs[i] = (Int16)output;
+
+                    rms.inputSample(outputs[i] / 32768.0);
                 }
+                outputStream.WriteSamples(outputs);
 
-                if((bytesRead & 4095) == 0)
+                if((samplesRead & 2047) == 0)
                 {
-                    callback.SignalProgress(((float) bytesRead)/inputLength);
+                    callback.SignalProgress(((float) samplesRead)/inputLength);
                 }
             }
 
             callback.SignalEndedConvolutionCalculation();
         }
 
-        private long ConvolutePoint(List<long> inputs, long[] response, int n)
+        private static long GetAverage(Int16[] inputs)
+        {
+            long averageInput = 0;
+            foreach (Int16 sample in inputs)
+            {
+                averageInput += (long)sample;
+            }
+            averageInput /= inputs.Length;
+            return averageInput;
+        }
+
+        private long ConvolutePoint(long[] inputs, long[] response, int n)
         {
             int lowerbound = n - response.Length + 1;
             if(lowerbound < 0)
@@ -116,7 +147,6 @@ namespace Rebound
                 {
                     long output = room.Water.Read(point.X, point.Y);
                     responses[point][i] = output >> 14;
-                    //rmsOutput.AddSample((output >> 9) / 32768.0);
                 }
 
                 room.Water.CalculateNextFrame();
